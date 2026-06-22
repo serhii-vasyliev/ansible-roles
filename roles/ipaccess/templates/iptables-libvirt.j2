@@ -1,0 +1,124 @@
+{{ ansible_managed | comment }}
+{% macro tcp_multiport_rule(ipsource,ports,comment) -%}
+{%- if ports is string -%}
+{{ _tcp_multiport_rule(ipsource,ports,comment) }}
+{%- else -%}
+{{ _tcp_multiport_rule(ipsource,ports|join(','),comment) }}
+{%- endif -%}
+{%- endmacro -%}
+{%- macro _tcp_multiport_rule(ipsource,multiportstr,comment) -%}
+-A INPUT -s "{{ ipsource|replace(' ','') }}" -p tcp -m tcp --match multiport --dports "{{ multiportstr|replace(' ','') }}" -j ACCEPT -m comment --comment "{{ comment|trim }}"
+{%- endmacro -%}
+
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [70329:5967835]
+:LIBVIRT_PRT - [0:0]
+-A POSTROUTING -j LIBVIRT_PRT
+COMMIT
+
+
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:OURNETS - [0:0]
+:LIBVIRT_FWI - [0:0]
+:LIBVIRT_FWO - [0:0]
+:LIBVIRT_FWX - [0:0]
+:LIBVIRT_INP - [0:0]
+:LIBVIRT_OUT - [0:0]
+-A INPUT -j LIBVIRT_INP
+-A FORWARD -j LIBVIRT_FWX
+-A FORWARD -j LIBVIRT_FWI
+-A FORWARD -j LIBVIRT_FWO
+-A OUTPUT -j LIBVIRT_OUT
+
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i tun+ -j ACCEPT
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i tun+ -j ACCEPT
+
+{% if is_lxc %}
+-A INPUT -i lxdbr0 -p udp --dport 67:68 -j ACCEPT
+-A OUTPUT -o lxdbr0 -p udp --sport 67:68 -j ACCEPT
+-A INPUT -i lxdbr0 -j ACCEPT
+{% endif %}
+{% if is_libvirt %}
+-A INPUT -i virbr0 -j ACCEPT
+{% endif %}
+
+
+{% if is_open_http_server %}
+# http direct access (needed for LTE's certbot
+-A INPUT -p tcp -m tcp --dport http -j ACCEPT -m comment --comment "http for LTE ansible"
+{% endif %}
+
+{% if is_open_https_server %}
+# httpS web server
+-A INPUT -p tcp -m tcp --dport https -j ACCEPT -m comment --comment "httpS server ansible"
+{% endif %}
+
+{% if is_open_web_server %}
+# web server
+-A INPUT -p tcp -m tcp --dport http -j ACCEPT -m comment --comment "web server ansible"
+-A INPUT -p tcp -m tcp --dport https -j ACCEPT -m comment --comment "web server ansible"
+{% endif %}
+
+{% if cloudflare_direct_access is defined and iplist_cdn_access_hosts|length > 0 %}
+# Multiport access for CF
+{% for ip in iplist_cdn_access_hosts %}
+-A INPUT -p tcp -m tcp -s {{ ip }} --match multiport --dports http,https -j ACCEPT -m comment --comment CloudFlare
+{% endfor %}
+{% endif %}
+
+{% if is_smtp_server %}
+# smtp server
+-A INPUT -p tcp -m tcp --dport smtp -j ACCEPT -m comment --comment "SMTP server ansible"
+{% endif %}
+{% if is_mail_server %}
+# mail server
+-A INPUT -p tcp -m tcp --match multiport --dports smtp,submission,pop3,pop3s,imap,imaps -j ACCEPT -m comment --comment "EMAIL server ansible"
+{% endif %}
+{% if is_open_ftp_server %}
+# open ftp server
+-A INPUT -p tcp -m tcp --match multiport --dports {{ ftp_multi_ports }} -j ACCEPT -m comment --comment "open ftp server ansible"
+{% endif %}
+
+{% for ips in ipaccess %}
+{% if ips.iplist is defined and ips.iplist|length>0 %}
+{% for ip in ips.iplist %}
+{% if ips.ports is defined and ips.ports|length>0 %}
+{{ tcp_multiport_rule(ip,ips.ports,ips.name) }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% if iplist_ftp_access_hosts is defined and iplist_ftp_access_hosts|length > 0 %}
+# Multiport access. Ports for FTP are also defined in vsftpd.conf
+{% for ip in iplist_ftp_access_hosts %}
+-A INPUT -p tcp -m tcp -s {{ ip }} --match multiport --dports {{ ftp_multi_ports }} -j ACCEPT -m comment --comment "{{ multiport_comment }}"
+{% endfor %}
+{% endif %}
+
+-A INPUT -p tcp --dport 22 -j REJECT --reject-with icmp-port-unreachable -m comment --comment "SSH denied ansible"
+
+-A INPUT -j REJECT --reject-with icmp-port-unreachable
+
+COMMIT
+
+{% if is_lxc %}
+# For LXC containers
+{% set nat_template_name = lxc_nat_template | default('lxc-nat.j2') %}
+{% include [nat_template_name] ignore missing %}
+{% endif %}
+
+{{ ansible_managed | comment }}

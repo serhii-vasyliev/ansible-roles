@@ -1,0 +1,83 @@
+---
+- name: Install iptables
+  package: name=iptables state=present
+  tags: ['iptables','install']
+
+- name: create /etc/sysconfig directory
+  file:
+    path: /etc/sysconfig
+    state: directory
+  tags: ['iptables','iptablestmp']
+
+- name: Merge the two ipaccess lists
+  set_fact:
+    ipaccess: "{{ ipaccess_default + ipaccess_extended }}"
+  tags: ['rules','iptables','iptablestmp','iptables.tmp']
+
+- name: "{{ iptables_tmp_file }} is just to save rules to compare them with if iptables_file validation fails"
+  template:
+      src: "{{ ipaccess_template }}"
+      dest: "{{ iptables_tmp_file }}"
+      owner: root
+      group: root
+      mode: 0440
+      backup: no
+      force: yes
+  tags: ['rules','iptablestmp','iptables.tmp','iptables']
+
+- import_tasks: iptables-services.yml
+  when: ansible_facts['os_family'] == "RedHat"
+
+- import_tasks: iptables-persistent.yml
+  when: ansible_facts['os_family'] == "Debian"
+
+#- name: Check if there is allow_from_our_nets.inc nginx~ file
+#  stat:
+#    path: /etc/nginx/conf.d/common.inc/allow_from_our_nets.inc
+#  register: nginx_access_list
+#  tags: ['nginx']
+#- name: nginx access list 
+#  copy: 
+#    backup: yes
+#    owner: "root"
+#    group: "wheel"
+#    mode: 0640
+#    src: ../nginx/files/nginx/allow_from_our_nets.inc
+#    dest: "/etc/nginx/conf.d/common.inc/"
+#  notify:
+#    - reload nginx
+#  tags: ['nginx']
+#  when: nginx_access_list.stat.exists
+#
+#- name: Check if there is allow_from_our_nets.inc apache file
+#  stat:
+#    path: /etc/httpd/conf.d/allow_from_our_nets.inc
+#  register: httpd_access_list
+#  tags: ['httpd']
+#- name: httpd 2.2 access list 
+#  copy: 
+#    backup: yes
+#    owner: "root"
+#    group: "wheel"
+#    mode: 0640
+#    src: ../apache/files/apache/allow_from_our_nets.inc
+#    dest: /etc/httpd/conf.d/allow_from_our_nets.inc
+#  notify:
+#    - reload httpd
+#  tags: ['httpd']
+#  when: httpd_access_list.stat.exists
+#- name: httpd 2.4 require_our_ip.inc
+#  copy: 
+#    backup: yes
+#    owner: "root"
+#    group: "wheel"
+#    mode: 0640
+#    src: ../apache/files/apache/require_our_ip.inc
+#    dest: /etc/httpd/conf.d/require_our_ip.inc
+#  notify:
+#    - reload httpd
+#  tags: ['httpd']
+#  when: httpd_access_list.stat.exists
+#
+#
+#

@@ -1,0 +1,27 @@
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+{% if is_lxc %}
+# Traffic from LXC containers to the internet
+-A POSTROUTING -s {{ lxc_net }} -o {{ ansible_default_ipv4.interface }} -j SNAT --to-source {{ ansible_default_ipv4.address }}
+{% endif %}
+{% if is_libvirt %}
+# Traffic from Virtual Machines to the internet
+-A POSTROUTING -s {{ libvirt_net }} -o {{ ansible_default_ipv4.interface }} -j SNAT --to-source {{ ansible_default_ipv4.address }}
+{% endif %}
+
+{% if ip_nat %}
+# Traffic to LXC containers and Virtual Machines from the specific hosts to specific port of the VM or the container
+{% for container in ip_nat %}
+# Traffic to {{ container.name }} port {{ container.to }}
+{% for ip in container.access %}
+-A PREROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.from }} -j DNAT --to-destination {{ container.ip }}:{{ container.to }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+COMMIT
+

@@ -1,0 +1,22 @@
+---
+- name: reload iptables
+  service: name=iptables state=reloaded
+
+- name: restart netfilter-persistent
+  service: name=netfilter-persistent state=restarted
+
+- name: restart ip6tables
+  service: name=ip6tables state=restarted
+
+- name: reload nginx
+  service: name=nginx enabled=yes state=reloaded
+
+- name: reload httpd
+  service: name=httpd enabled=yes state=reloaded
+
+- name: restart vsftpd
+  service: name=vsftpd enabled=yes state=restarted
+
+- name: restart pure-ftpd
+  service: name=pure-ftpd enabled=yes state=restarted
+

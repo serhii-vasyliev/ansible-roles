@@ -1,0 +1,28 @@
+---
+- name: Install iptables-persistent
+  package: name=iptables-persistent state=present
+  tags: ['rules','install']
+
+- name: "Fill up /etc/iptables/rules.v4 file and check it with iptables-restore validate command, than reload netfilter-persistent service"
+  template:
+      src: iptables.j2
+      dest: /etc/iptables/rules.v4
+      owner: root
+      group: root
+      mode: 0440
+      backup: yes
+      validate: iptables-restore -t %s
+  notify:
+    - restart netfilter-persistent
+  tags: ['rules']
+
+- name: "Create /etc/network/iptables.up.rules file and check it with iptables-restore validate command"
+  template:
+      src: iptables.j2
+      dest: /etc/network/iptables.up.rules
+      owner: root
+      group: root
+      mode: 0440
+      backup: yes
+      validate: iptables-restore -t %s
+  tags: ['rules']

@@ -1,0 +1,41 @@
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+{% if is_lxc %}
+# Traffic from LXC containers to the internet
+-A POSTROUTING -s {{ lxc_net }} -o {{ ansible_default_ipv4.interface }} -j SNAT --to-source {{ ansible_default_ipv4.address }}
+{% endif %}
+{% if is_libvirt %}
+# Traffic from Virtual Machines to the internet
+-A POSTROUTING -s {{ libvirt_net }} -o {{ ansible_default_ipv4.interface }} -j SNAT --to-source {{ ansible_default_ipv4.address }}
+{% endif %}
+# restricted access to the container's MySQL port
+{% for container in lxc_containers_mysql %}
+{% for ip in iplist_lxc_mysql_access %}
+{% if is_masquerade %}
+-A POSTROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_mysql }} -j MASQUERADE
+{% endif %}
+{% if is_dnat %}
+-A PREROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_mysql }} -j DNAT --to-destination {{ container.ip }}:3306
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% for container in lxc_containers %}
+# SSH access to the containers from the list of predefined IPs 
+{% for ip in iplist_lxc_access_hosts %}
+-A PREROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_ssh }} -j DNAT --to-destination {{ container.ip }}:22
+{% endfor %}
+{% endfor %}
+
+{% if is_lxc_mailserver %}
+{% for port in mail_ports %}
+-A PREROUTING -d {{ ansible_default_ipv4.address }} -p tcp -m tcp --dport {{ port }} -j DNAT --to-destination {{ lxc_mailserver }}:{{ port }}
+{% endfor %}
+{% endif %}
+
+COMMIT
+

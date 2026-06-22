@@ -1,0 +1,26 @@
+---
+
+- name: Install iptables-services
+  package: name=iptables-services state=present
+  tags: ['iptables']
+
+- name: Start service iptables
+  ansible.builtin.service:
+    name: iptables
+    state: started
+    enabled: yes
+  tags: ['iptables','install','iptables-services']
+
+- name: "Create {{ iptables_file_rhel }} file and check it with iptables-restore validate command"
+  template:
+      src: iptables.j2
+      dest: "{{ iptables_file_rhel }}"
+      owner: root
+      group: root
+      mode: 0440
+      backup: yes
+      validate: iptables-restore -t %s
+  notify:
+    - reload iptables
+  tags: ['iptables']
+
