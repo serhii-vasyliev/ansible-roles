@@ -1,0 +1,7 @@
+---
+  - name: "Set vm.swappiness to {{ swapiness }}"
+    copy:
+      dest: "/etc/sysctl.d/10-swappiness.conf"
+      content: "vm.swappiness = {{ swapiness }} "
+  - name: reload swapiness parameter
+    command: sysctl -p /etc/sysctl.d/10-swappiness.conf
