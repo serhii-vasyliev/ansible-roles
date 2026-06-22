@@ -1,0 +1,38 @@
+---
+
+- name: Add static IP configuration inside the container for NetPlan
+  template:
+      src: container_netplan_static.yml.j2
+      dest: "{{ lxd_dir }}/containers/{{ container_name }}/rootfs/etc/netplan/10-static.yaml"
+      owner: root
+      group: root
+      mode: 0400
+      backup: no
+      force: yes
+#  notify:
+#    - netplan apply
+
+- name: Disable cloudinit DHCP
+  copy:
+      dest: "{{ lxd_dir }}/containers/{{ container_name }}/rootfs/etc/netplan/50-cloud-init.yaml"
+      content: ""
+      owner: root
+      group: root
+      mode: 0400
+      backup: yes
+
+- name: Apply NetPlan configuration unconditionally
+  ansible.builtin.command: "{{ lxc_bin }} exec {{ container_name }} netplan apply"
+
+
+# Supposedly, for managed bridges; not tested
+#- name: Add NIC with static IP configuration
+#  ansible.builtin.command:
+#    cmd: >-
+#      incus config device add {{ container_name }} eth0 nic
+#      nictype=bridged
+#      parent={{ lxc_network }}
+#      ipv4.address={{ container_ip }}
+#  #args:
+#  #  creates: "{{ lxd_dir }}/containers/{{ container_name }}/rootfs"  # rough check
+#

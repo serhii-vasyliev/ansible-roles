@@ -1,0 +1,9 @@
+---
+# Now runs unconditionally from the task
+#- name: netplan apply
+#  ansible.builtin.command: "{{ lxc_bin }} exec {{ container_name }} -- netplan apply"
+#  tags:
+#    - netplan
+#    - container-ipaddr
+
+  

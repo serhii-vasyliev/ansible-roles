@@ -1,0 +1,18 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: no
+      addresses:
+        - {{ container_ip }}/{{ container_netmask | default('24') }}
+      routes:
+        - to: default
+          via: {{ container_gateway | default('10.0.3.1') }}
+      nameservers:
+        addresses:
+          - {{ ns1 | default('1.0.0.1') }} 
+          - {{ ns2 | default('8.8.4.4') }} 
+        search:
+          - {{ systemd_resolved_domains }}
+

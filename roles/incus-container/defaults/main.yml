@@ -1,0 +1,25 @@
+---
+storage_pool: default
+lxc_socket: "unix:/var/lib/incus/unix.socket"
+lxd_dir: '/var/lib/incus'
+lxc_bin: '/usr/bin/incus'
+nictype: 'bridged'
+systemd_resolved_domains: 'example.com'
+
+lxc_image_mode: 'local'
+lxc_image_server: 'local:'
+
+lxc_image: 'ubuntu2204-mysql56'
+container_name: 'ubuntu-mysql56'
+container_gateway: '10.0.3.1'
+container_network: '10.0.3.0/24'
+container_ip: '10.0.3.254'
+
+# Change these for actual name and paths
+is_use_volume: false
+volumes_host_path: /var/lib/mysql
+volume_name: 'ubuntu-mysql56'
+volume_container_path: /var/lib/mysql
+volume_mode: '0755'
+volume_owner: root
+volume_group: root

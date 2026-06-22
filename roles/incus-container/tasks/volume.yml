@@ -1,0 +1,46 @@
+---
+- name: Ensure host directory exists
+  file:
+    path: "{{ volumes_host_path }}/{{ volume_name }}"
+    state: directory
+    mode: "{{ volume_mode }}"
+    owner: "{{ volume_owner }}"
+    group: "{{ volume_group }}"
+  changed_when: true
+  register: volume_create
+  tags: ['create_host_volume_dir']
+
+- name: Check attached devices on container
+  command: incus config device list "{{ container_name }}"
+  register: attached_devices
+  changed_when: false
+
+- name: Show attached devices
+  debug:
+    msg: "Attached devices: {{ attached_devices | default([]) }}"
+
+- name: Check specific volume attachment
+  command: incus config device show "{{ container_name }}"
+  register: device_config
+  changed_when: false
+  #when: "{{ volume_name }} in attached_devices.stdout"
+
+- name: Display full device configuration
+  debug:
+    var: device_config.stdout
+
+- name: Create volume host dir 
+  block:
+
+    - name: Attach storage volume to container
+      ansible.builtin.command:
+        cmd: >-
+          incus config device add {{ container_name }}
+          {{ volume_name }} disk shift=true
+          source="{{ volumes_host_path }}/{{ volume_name }}"
+          path="{{ volume_container_path }}"
+      when: volume_create.changed 
+
+  when: >
+    ((container | default({})).changed | default(false) | bool) or
+    (volume_create.changed | default(false) | bool)

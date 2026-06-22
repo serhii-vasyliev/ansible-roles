@@ -1,0 +1,28 @@
+---
+
+- name: Create and start the container
+  community.general.lxd_container:
+    name: "{{ container_name }}"
+    url: "{{ lxc_socket }}"
+    state: started
+    type: container
+    source:
+      type: image
+      alias: "{{ lxc_image }}"
+      mode: "{{ lxc_image_mode }}"
+    wait_for_ipv4_addresses: true
+    timeout: 300
+    config:
+      boot.autostart: "true"
+      # devices will be added after creation
+  register: container
+  tags: ['create_container']
+ 
+- import_tasks: ipaddr.yml
+  tags: ['container-ipaddr']
+ 
+##- include_tasks: volume.yml
+- import_tasks: volume.yml
+  when: is_use_volume  | bool
+  tags: ['container_volume']
+
