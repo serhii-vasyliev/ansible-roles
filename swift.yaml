@@ -1,0 +1,42 @@
+---
+- name:  localhost
+  hosts: swift
+  become: yes
+  gather_facts: yes
+  vars:
+    is_lxc: true
+    ipaccess_template: iptables-libvirt.j2
+    lxc_nat_template: nat-libvirt.j2
+
+  roles:
+    - { role: swappiness , tags: ['swappiness','never'] }
+    - { role: ipaccess , tags: ['ipaccess','never'] }
+
+    - role: incus-container
+      lxc_image: 'ubuntu2204-mysql56'
+      container_name: 'mysql-demo0'
+      container_ip: '10.0.3.51'
+      is_use_volume: true
+      volume_name: 'mysql-demo0'
+      volume_container_path: /var/lib/mysql
+      volume_mode: 0750
+      volume_owner: 113
+      volume_group: 121
+      tags: ['mysql-56','never']
+
+    - role: incus-container
+      lxc_image: 'mysql57-ubuntu22'
+      container_name: 'mysql-demo1'
+      container_ip: '10.0.3.52'
+      is_use_volume: true
+      volume_name: 'mysql-demo1'
+      volume_container_path: /var/lib/mysql
+      volume_mode: 0750
+      volume_owner: 113
+      volume_group: 121
+      tags: ['mysql-57','never']
+
+
+
+
+

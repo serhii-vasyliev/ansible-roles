@@ -1,0 +1,35 @@
+---
+# Just an example for `ipaccess` role (iptables firewall + nat)
+# ToDo: not tested as an example
+
+is_dnat: true
+
+lxc_containers_mysql:
+ - name: mysql56
+   ip: 10.0.3.51
+   forward_port_mysql: 3306
+   allowed_hosts:
+     - 192.168.8.15
+
+lxc_containers:
+ - name: demo0vm
+   ip: 10.0.3.11
+   forward_port_ssh: 2211
+ - name: demo1vm
+   ip: 10.0.3.12
+   forward_port_ssh: 2212
+ - name: mysql56
+   ip: 10.0.3.51
+   forward_port_ssh: 2251
+ - name: mysql57
+   ip: 10.0.3.52
+   forward_port_ssh: 2252
+
+ipaccess_extended:
+  - name: 'LetsEncrypt'
+    iplist: ['0.0.0.0']
+    ports: ['http']
+  - name: 'backup'
+    iplist: ['127.0.57.87']
+    ports: ['rsync']
+

@@ -1,0 +1,11 @@
+# Ansible Hosts
+
+[all:vars]
+ftp_umask=022
+vsftpd_logrotate_count=52
+vsftpd_compress=nocompress
+ntpd_enabled=true
+
+[swift]
+127.0.0.1
+
