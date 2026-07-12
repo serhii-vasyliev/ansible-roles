@@ -1,0 +1,43 @@
+{{ ansible_managed | comment }}
+{% macro tcp_multiport_rule(ipsource,ports,comment) -%}
+{%- if ports is string -%}
+{{ _tcp_multiport_rule(ipsource,ports,comment) }}
+{%- else -%}
+{{ _tcp_multiport_rule(ipsource,ports|join(','),comment) }}
+{%- endif -%}
+{%- endmacro -%}
+{%- macro _tcp_multiport_rule(ipsource,multiportstr,comment) -%}
+-A DOCKER-USER -s "{{ ipsource|replace(' ','') }}" -p tcp -m tcp --match multiport --dports "{{ multiportstr|replace(' ','') }}" -j ACCEPT -m comment --comment "{{ comment|trim }}"
+{%- endmacro -%}
+
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:DOCKER-USER - [0:0]
+:OURNETS - [0:0]
+
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i tun+ -j ACCEPT
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i tun+ -j ACCEPT
+
+{% for ips in ipaccess %}
+{% if ips.iplist is defined and ips.iplist|length>0 %}
+{% for ip in ips.iplist %}
+{% if ips.ports is defined and ips.ports|length>0 %}
+{{ tcp_multiport_rule(ip,ips.ports,ips.name) }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+-A DOCKER-USER -j RETURN
+
+COMMIT
+
+{{ ansible_managed | comment }}

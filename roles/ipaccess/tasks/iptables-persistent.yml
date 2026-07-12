@@ -5,24 +5,24 @@
 
 - name: "Fill up /etc/iptables/rules.v4 file and check it with iptables-restore validate command, than reload netfilter-persistent service"
   template:
-      src: iptables.j2
+      src: "{{ ipaccess_template }}"
       dest: /etc/iptables/rules.v4
       owner: root
       group: root
       mode: 0440
       backup: yes
-      validate: iptables-restore -t %s
+      validate: iptables-restore --noflush --test %s
   notify:
-    - restart netfilter-persistent
+    - restore noflash
   tags: ['rules']
 
 - name: "Create /etc/network/iptables.up.rules file and check it with iptables-restore validate command"
   template:
-      src: iptables.j2
+      src: "{{ ipaccess_template }}"
       dest: /etc/network/iptables.up.rules
       owner: root
       group: root
       mode: 0440
       backup: yes
-      validate: iptables-restore -t %s
+      validate: iptables-restore --noflush --test %s
   tags: ['rules']
