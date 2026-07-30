@@ -1,0 +1,1 @@
+alias pcc='promtool check config /etc/prometheus/prometheus.yml'
