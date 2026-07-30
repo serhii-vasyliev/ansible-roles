@@ -16,13 +16,8 @@
     - restart netfilter-persistent
   tags: ['rules']
 
-- name: "Create /etc/network/iptables.up.rules file and check it with iptables-restore validate command"
-  template:
-      src: iptables.j2
-      dest: /etc/network/iptables.up.rules
-      owner: root
-      group: root
-      mode: 0440
-      backup: yes
-      validate: iptables-restore -t %s
-  tags: ['rules']
+- name: "Clear /etc/network/iptables.up.rules file which is not needed anymore on modern systems with iptables-persistent"
+  file:
+   path: /etc/network/iptables.up.rules
+   state: absent
+  tags: ['rules','cleanup']
