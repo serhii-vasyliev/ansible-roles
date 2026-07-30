@@ -26,7 +26,7 @@
   tags: ['rules', 'iptablestmp', 'iptables.tmp', 'iptables']
 
 - name: "Verify syntax of the saved iptables.tmp file"
-  ansible.builtin.command: "iptables-restore --noflush --test {{ iptables_tmp_file }}"
+  ansible.builtin.command: "iptables-restore --test {{ iptables_tmp_file }}"
   register: iptables_validation
   failed_when: false  # Do not stop playbook execution if validation fails
   changed_when: false # Do not mark this task as 'changed' in Ansible
