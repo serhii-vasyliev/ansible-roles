@@ -1,4 +1,10 @@
 ---
+- name: Set sudo group based on OS family
+  set_fact:
+    sudo_group: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
+  tags:
+   - always
+
 - name: Install iptables
   package: name=iptables state=present
   tags: ['iptables','install']
@@ -9,33 +15,25 @@
     state: directory
   tags: ['iptables','iptablestmp']
 
+
 - name: Merge the two ipaccess lists
   set_fact:
     ipaccess: "{{ ipaccess_default + ipaccess_extended }}"
-  tags: ['rules','iptables','iptablestmp','iptables.tmp']
+  tags: ['rules','iptables','iptablestmp']
 
-- name: "Save temporary iptables file (even if it contains errors)"
+- name: "temporary iptables file"
   ansible.builtin.template:
     src: "{{ ipaccess_template }}"
     dest: "{{ iptables_tmp_file }}"
     owner: root
-    group: root
+    group: "{{ sudo_group }}"
     mode: 0440
     force: yes
     backup: no
   tags: ['rules', 'iptablestmp', 'iptables.tmp', 'iptables']
 
-- name: "Verify syntax of the saved iptables.tmp file"
+- name: "Verify iptables.tmp file"
   ansible.builtin.command: "iptables-restore --test {{ iptables_tmp_file }}"
-  register: iptables_validation
-  failed_when: false  # Do not stop playbook execution if validation fails
-  changed_when: false # Do not mark this task as 'changed' in Ansible
-  tags: ['rules', 'iptablestmp', 'iptables.tmp', 'iptables']
-
-- name: "Alert if iptables rules validation failed for iptables.tmp"
-  ansible.builtin.debug:
-    msg: "Warning! The temporary file contains errors: {{ iptables_validation.stderr }}"
-  when: iptables_validation.rc != 0
   tags: ['rules', 'iptablestmp', 'iptables.tmp', 'iptables']
 
 - import_tasks: iptables-services.yml

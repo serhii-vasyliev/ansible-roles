@@ -1,15 +1,7 @@
 ---
 # Just an example for `ipaccess` role (iptables firewall + nat)
-# ToDo: not tested as an example
 
 is_dnat: true
-
-lxc_containers_mysql:
- - name: mysql56
-   ip: 10.0.3.51
-   forward_port_mysql: 3306
-   allowed_hosts:
-     - 192.168.8.15
 
 lxc_containers:
  - name: demo0vm
