@@ -1,7 +1,7 @@
 ---
 
 # Fair warning: this part is not fully indepotent.
-# You create create only one volulume only one time.
+# You can create only one volulume only one time.
 # Presuming that you are creating LXC container _with_ volume
 # ONLY ONCE and not modifying volumes later
 
