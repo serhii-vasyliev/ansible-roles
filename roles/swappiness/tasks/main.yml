@@ -6,17 +6,18 @@
   - name: reload swapiness parameter
     command: sysctl -p /etc/sysctl.d/10-swappiness.conf
 
-  - name: some commands to monitor memory and swap usage
-    copy:
-      force: yes
-      backup: no
-      owner: "root"
-      group: "root"
-      mode: 0755
-      src: "{{ item }}"
-      dest: "/root/bin"
-    with_fileglob: "bin/*"
-    tags:
-      - mem-utils
-      - never
+## Do not copy those scriptlets to the server. They are for reference only.
+#  - name: some commands to monitor memory and swap usage
+#    copy:
+#      force: yes
+#      backup: no
+#      owner: "root"
+#      group: "root"
+#      mode: 0755
+#      src: "{{ item }}"
+#      dest: "/root/bin"
+#    with_fileglob: "bin/*"
+#    tags:
+#      - mem-utils
+#      - never
 
