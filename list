@@ -7,7 +7,7 @@ vsftpd_compress=nocompress
 ntpd_enabled=true
 
 [swift]
-127.0.0.1
+swift
 
 [book]
-192.168.8.16
+book
