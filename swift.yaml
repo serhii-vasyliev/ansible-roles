@@ -4,9 +4,9 @@
   become: yes
   gather_facts: yes
   vars:
-    is_lxc: true
-    ipaccess_template: iptables-libvirt.j2
-    lxc_nat_template: nat-libvirt.j2
+#    is_lxc: true
+#    ipaccess_template: iptables-libvirt.j2
+#    lxc_nat_template: nat-libvirt.j2
 
   roles:
     - { role: swappiness , tags: ['swappiness','never'] }

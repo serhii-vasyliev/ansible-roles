@@ -9,3 +9,5 @@ ntpd_enabled=true
 [swift]
 127.0.0.1
 
+[book]
+192.168.8.16
