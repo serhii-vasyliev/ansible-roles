@@ -17,9 +17,6 @@
 {% for container in lxc_containers_mysql %}
 {# % for ip in iplist_lxc_mysql_access % #}
 {% for ip in container.allowed_hosts %}
-{% if is_masquerade %}
--A POSTROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_mysql }} -j MASQUERADE
-{% endif %}
 {% if is_dnat %}
 -A PREROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_mysql }} -j DNAT --to-destination {{ container.ip }}:3306
 {% endif %}

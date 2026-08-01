@@ -11,20 +11,7 @@
 {%- endmacro -%}
 
 *filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
 :DOCKER-USER - [0:0]
-:OURNETS - [0:0]
-
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -p icmp -j ACCEPT
--A INPUT -i lo -j ACCEPT
--A INPUT -i tun+ -j ACCEPT
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -p icmp -j ACCEPT
--A INPUT -i lo -j ACCEPT
--A INPUT -i tun+ -j ACCEPT
 
 {% for ips in ipaccess %}
 {% if ips.iplist is defined and ips.iplist|length>0 %}
@@ -36,7 +23,7 @@
 {% endif %}
 {% endfor %}
 
--A DOCKER-USER -j RETURN
+-A DOCKER-USER -j REJECT --reject-with icmp-port-unreachable
 
 COMMIT
 
