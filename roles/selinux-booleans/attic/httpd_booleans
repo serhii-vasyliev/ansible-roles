@@ -1,0 +1,10 @@
+setsebool -P ftpd_full_access=1
+setsebool -P rsync_full_access on
+setsebool -P httpd_can_sendmail=1
+setsebool -P httpd_can_connect_ldap 1
+setsebool -P httpd_can_network_connect 1
+setsebool -P httpd_setrlimit 1	# For Nginx
+setsebool -P zabbix_can_network on
+setsebool -P selinuxuser_mysql_connect_enabled on # For Zabbix-Agent
+
+# setsebool -P httpd_unified 1 # ? https://www.certdepot.net/rhel7-how-to-deal-with-httpd-selinux-policy/

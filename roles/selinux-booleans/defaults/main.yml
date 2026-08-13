@@ -1,0 +1,14 @@
+---
+is_zabbix_run_sudo: false
+
+sebool_enable:
+#  - httpd_can_network_connect
+#  - httpd_can_sendmail 
+  - httpd_use_nfs
+    # For Nginx
+#  - httpd_setrlimit
+    # For Zabbix-Agent
+  - zabbix_can_network
+#  - exim_can_connect_db
+#  - haproxy_connect_any
+
