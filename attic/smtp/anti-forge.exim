@@ -1,9 +1,0 @@
-#  defer
-  warn
-        hosts     = ! : !+relay_from_hosts
-        # +spf_white_hosts
-        !authenticated = *
-        message =     Forged sender`s address From: $h_from
-        log_message = Forged From: detected: From: $h_from == To: $h_to
-         condition = ${if eq {$h_from:} {$h_to:}}
-
