@@ -79,10 +79,3 @@
     setype: http_port_t
     state: present
 
-- name: Allow Nginx to listen on tcp port 6379 for status module stub
-  seport:
-    ports: 6379
-    proto: tcp
-    setype: http_port_t
-    state: present
-
