@@ -1,0 +1,30 @@
+---
+systemd_resolved_servers:
+  - 1.1.1.1
+  - 8.8.8.8
+  - 1.0.0.1
+  - 8.8.4.4
+
+systemd_resolved_fallback_servers:
+  - 1.0.0.1
+  - 8.8.4.4
+  - 1.1.1.1
+  - 8.8.8.8
+
+systemd_resolved_domains_dev:
+  - templatemonsterdev.com
+  - int.templatemonsterdev.com
+  - fra.templatemonsterdev.com
+
+
+systemd_resolved_domains_prod:
+  - int.templatemonster.com
+  - do3.templatemonster.com
+  - do.templatemonster.com
+  - templatemonster.com
+
+systemd_resolved_domains: "{{ systemd_resolved_domains_dev }}"
+
+ansible_connections:
+  - "System eth0"
+  - "System eth1"

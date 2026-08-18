@@ -1,0 +1,7 @@
+
+{{ ansible_managed | comment }}
+
+[Resolve]
+DNS={{ systemd_resolved_fallback_servers | join(' ') }}
+FallbackDNS={{ systemd_resolved_servers | join(' ') }}
+Domains={{ systemd_resolved_domains | join(' ') }}
