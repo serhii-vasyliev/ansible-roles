@@ -1,0 +1,9 @@
+.vault_passwd
+*.vault_passwd
+*.retry
+*.latest
+*.list
+*.orig
+*~
+*swp
+*swap

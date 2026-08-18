@@ -1,0 +1,81 @@
+---
+- name: Toggle off httpd_unified (default is on in CentOS 6) , httpd_tty_comm , CGI
+  seboolean:
+    name: "{{ item }}"
+    state: off
+    persistent: yes
+  with_items:
+  - httpd_unified
+  - httpd_tty_comm
+  - httpd_enable_cgi
+  tags:
+    - selinux
+    - sebooleans
+
+- name: Set seboolean flags on and keep them persistent across reboots
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+  - httpd_use_nfs
+  - httpd_setrlimit
+  - zabbix_can_network
+  - httpd_can_network_connect_db
+  - httpd_can_network_connect
+  - httpd_can_sendmail 
+    # For Nginx
+    # For Zabbix-Agent
+#  - exim_can_connect_db
+#  - haproxy_connect_any
+
+- name: Set seboolean flags on and keep them persistent across reboots for Centos 6
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+  - logging_syslogd_can_sendmail
+  - allow_ftpd_full_access
+  when: ansible_facts['distribution_major_version'] == "6"
+  tags:
+    - selinux
+    - sebooleans
+
+- name: Set seboolean flags on and keep them persistent across reboots for Centos 7
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+#  - httpd_can_connect_ldap
+  - rsync_full_access
+  - ftpd_full_access
+    # For Zabbix-Agent
+  - selinuxuser_mysql_connect_enabled
+  when: ansible_facts['distribution_major_version'] >= "7"
+
+- name: Set semanage permissive for rsync, zabbix-agent and setsebool -P httpd_tty_comm off for CentOS 6
+  block:
+    - selinux_permissive:
+        name: rsync_t
+        permissive: true
+    - selinux_permissive:
+        name: zabbix_agent_t
+        permissive: true
+  when: ansible_facts['distribution_major_version'] == "6"
+
+- name: zabbix_run_sudo ( for smartctl, mostly )
+  seboolean:
+    name: zabbix_run_sudo
+    state: on
+    persistent: yes
+  when: ansible_facts['distribution_major_version'] >= "7" and is_zabbix_run_sudo
+
+- name: Allow Apache to listen on tcp port 8080
+  seport:
+    ports: 8080
+    proto: tcp
+    setype: http_port_t
+    state: present
+

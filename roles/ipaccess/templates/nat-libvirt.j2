@@ -17,6 +17,9 @@
 {% for container in lxc_containers_mysql %}
 {# % for ip in iplist_lxc_mysql_access % #}
 {% for ip in container.allowed_hosts %}
+{% if is_masquerade %}
+-A POSTROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_mysql }} -j MASQUERADE
+{% endif %}
 {% if is_dnat %}
 -A PREROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_mysql }} -j DNAT --to-destination {{ container.ip }}:3306
 {% endif %}
@@ -24,7 +27,7 @@
 {% endfor %}
 
 {% for container in lxc_containers %}
-# SSH access to the containers from the list of predefined IPs
+# SSH access to the containers from the office and the VPN
 {% for ip in iplist_lxc_access_hosts %}
 -A PREROUTING -s {{ ip }}  -p tcp -m tcp --dport {{ container.forward_port_ssh }} -j DNAT --to-destination {{ container.ip }}:22 -m comment --comment "{{ container.name }} ansible"
 {% endfor %}

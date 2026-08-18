@@ -1,0 +1,17 @@
+---
+
+# EL8+ minimal kernels split netfilter match modules into kernel-modules-extra
+# (needed for multiport/tcp/comment/state in our iptables templates).
+# iptables-nft* / iptables-utils: nft backend tools used on modern EL.
+- name: Install kernel-modules-extra and iptables-nft packages (EL8+)
+  package:
+    name:
+      - kernel-modules-extra
+      - iptables-nft
+      - iptables-nft-services
+      - iptables-utils
+    state: present
+  when:
+    - ansible_facts['os_family'] == "RedHat"
+    - ansible_distribution_major_version | int >= 8
+  tags: ['iptables', 'install']

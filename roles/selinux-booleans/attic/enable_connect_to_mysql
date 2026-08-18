@@ -1,0 +1,2 @@
+setsebool -P selinuxuser_mysql_connect_enabled=1
+setsebool -P exim_can_connect_db on

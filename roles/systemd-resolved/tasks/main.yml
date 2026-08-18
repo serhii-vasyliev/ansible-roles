@@ -1,0 +1,77 @@
+---
+- name: Ensure systemd-resolved configuration directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Remove DigitalOcean resolved.conf.d configuration
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d/DigitalOcean.conf
+    state: absent
+
+- name: Remove other resolved.conf.d configurations
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ query('fileglob', '/etc/systemd/resolved.conf.d/*.conf') | difference(['/etc/systemd/resolved.conf.d/dns.conf']) }}"
+  become: true
+
+- name: Deploy systemd-resolved configuration
+  ansible.builtin.template:
+    src: dns.conf.j2
+    dest: /etc/systemd/resolved.conf.d/dns.conf
+    mode: '0644'
+  become: true
+  notify: Restart systemd-resolved
+
+- name: Ensure /etc/systemd/resolved.conf has no conflicting DNS settings
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^DNS='
+    line: 'DNS='
+    state: present
+  become: true
+  notify: Restart systemd-resolved
+
+- name: Ensure /etc/systemd/resolved.conf has no conflicting FallbackDNS settings
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^FallbackDNS='
+    line: 'FallbackDNS='
+    state: present
+  become: true
+  notify: Restart systemd-resolved
+
+
+- name: Check if systemd-networkd is active
+  ansible.builtin.systemd:
+    name: systemd-networkd
+    state: started
+  register: networkd_status
+  ignore_errors: true
+  become: true
+
+- name: Configure systemd-networkd to ignore DHCP DNS
+  ansible.builtin.copy:
+    dest: /etc/systemd/network/20-wired.network
+    content: |
+      [Match]
+      Name=eth*
+      [Network]
+      DHCP=yes
+      [DHCP]
+      UseDNS=false
+    mode: '0644'
+  become: true
+  when: networkd_status.status.ActiveState == 'active'
+  notify: Restart systemd-networkd
+
+- name: Ensure systemd-resolved is enabled and started
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: started
+    enabled: true
+  become: true
+

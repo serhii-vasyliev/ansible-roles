@@ -1,0 +1,5 @@
+---
+mysql_exporter_version: 0.20.0
+mysql_exporter_user: zabbix
+mysql_exporter_group: zabbix
+mysql_exporter_mycnf: /var/lib/zabbix/.my.cnf

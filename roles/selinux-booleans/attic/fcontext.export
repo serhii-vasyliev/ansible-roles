@@ -1,0 +1,3 @@
+fcontext -a -f a -t httpd_sys_content_t '/usr/local/www(/.*)?'
+fcontext -a -f a -t httpd_config_t 'modsec-shared-collections'
+fcontext -a -f a -t httpd_config_t 'modsec-shared-collections-lock'

@@ -10,11 +10,32 @@
 -A INPUT -s "{{ ipsource|replace(' ','') }}" -p tcp -m tcp --match multiport --dports "{{ multiportstr|replace(' ','') }}" -j ACCEPT -m comment --comment "{{ comment|trim }}"
 {%- endmacro -%}
 
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [70329:5967835]
+:LIBVIRT_PRT - [0:0]
+-A POSTROUTING -j LIBVIRT_PRT
+COMMIT
+
+
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD ACCEPT [0:0]
 :OUTPUT ACCEPT [0:0]
 :OURNETS - [0:0]
+:LIBVIRT_FWI - [0:0]
+:LIBVIRT_FWO - [0:0]
+:LIBVIRT_FWX - [0:0]
+:LIBVIRT_INP - [0:0]
+:LIBVIRT_OUT - [0:0]
+-A INPUT -j LIBVIRT_INP
+-A FORWARD -j LIBVIRT_FWX
+-A FORWARD -j LIBVIRT_FWI
+-A FORWARD -j LIBVIRT_FWO
+-A OUTPUT -j LIBVIRT_OUT
 
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT -p icmp -j ACCEPT
@@ -35,13 +56,27 @@
 {% endif %}
 
 
-{% if (is_http_server | default(false)) or (is_open_web_server | default(false)) %}
-# Open http server, including Let`s Encrypt queries
--A INPUT -p tcp -m tcp --dport http -j ACCEPT -m comment --comment "HTTP is open ansible"
+{% if is_open_http_server %}
+# http direct access (needed for LTE's certbot
+-A INPUT -p tcp -m tcp --dport http -j ACCEPT -m comment --comment "http for LTE ansible"
 {% endif %}
-{% if (is_https_server | default(false)) or (is_open_web_server | default(false)) %}
-# Open httpS server
--A INPUT -p tcp -m tcp --dport https -j ACCEPT -m comment --comment "HTTPS is open ansible"
+
+{% if is_open_https_server %}
+# httpS web server
+-A INPUT -p tcp -m tcp --dport https -j ACCEPT -m comment --comment "httpS server ansible"
+{% endif %}
+
+{% if is_open_web_server %}
+# web server
+-A INPUT -p tcp -m tcp --dport http -j ACCEPT -m comment --comment "web server ansible"
+-A INPUT -p tcp -m tcp --dport https -j ACCEPT -m comment --comment "web server ansible"
+{% endif %}
+
+{% if cloudflare_direct_access is defined and iplist_cdn_access_hosts|length > 0 %}
+# Multiport access for CF
+{% for ip in iplist_cdn_access_hosts %}
+-A INPUT -p tcp -m tcp -s {{ ip }} --match multiport --dports http,https -j ACCEPT -m comment --comment CloudFlare
+{% endfor %}
 {% endif %}
 
 {% if is_smtp_server %}
@@ -67,15 +102,8 @@
 {% endif %}
 {% endfor %}
 
-{% if cloudflare_direct_access is defined and iplist_cdn_access_hosts|length > 0 %}
-# Multiport access for CF
-{% for ip in iplist_cdn_access_hosts %}
--A INPUT -p tcp -m tcp -s {{ ip }} --match multiport --dports http,https -j ACCEPT -m comment --comment CloudFlare
-{% endfor %}
-{% endif %}
-
 {% if iplist_ftp_access_hosts is defined and iplist_ftp_access_hosts|length > 0 %}
-# Multiport access. Ports for FTP are also defined in /etc/vsftpd/vsftpd.conf
+# Multiport access. Ports for FTP are also defined in vsftpd.conf
 {% for ip in iplist_ftp_access_hosts %}
 -A INPUT -p tcp -m tcp -s {{ ip }} --match multiport --dports {{ ftp_multi_ports }} -j ACCEPT -m comment --comment "{{ multiport_comment }}"
 {% endfor %}

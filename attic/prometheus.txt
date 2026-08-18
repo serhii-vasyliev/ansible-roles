@@ -1,8 +1,0 @@
-
-alias amreload='amtool check-config alertmanager.yml && service prometheus-alertmanager reload'
-
-alias pcc='promtool check config /etc/prometheus/prometheus.yml && service prometeus reload'
-
-# when Lifecycle API is enabled
-#alias pcrel='curl -X POST http://localhost:9090/-/reload'
-##alias pcrel='curl -X POST http://prometheus:9990/-/reload'
