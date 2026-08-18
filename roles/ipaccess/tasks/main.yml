@@ -4,10 +4,25 @@
     sudo_group: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
   tags:
    - always
+#- debug: 
+#    msg: "ipaccess_default: {{ ipaccess_default }}"
+#  tags:
+#   - always
+#- debug: 
+#    msg: "ipaccess_extended: {{ ipaccess_extended }}"
+#  tags:
+#   - always
 
 - name: Install iptables
-  package: name=iptables state=present
-  tags: ['iptables','install']
+  package:
+    name: iptables
+    state: present
+  tags: ['iptables','iptablestmp','install']
+
+
+- import_tasks: setup-redhat.yml
+  when: ansible_facts['os_family'] == "RedHat"
+  tags: ['iptables', 'install']
 
 - name: create /etc/sysconfig directory
   file:
@@ -19,9 +34,9 @@
 - name: Merge the two ipaccess lists
   set_fact:
     ipaccess: "{{ ipaccess_default + ipaccess_extended }}"
-  tags: ['rules','iptables','iptablestmp']
+  tags: ['rules','iptables','iptablestmp','iptables.tmp']
 
-- name: "temporary iptables file"
+- name: "Save temporary iptables file"
   ansible.builtin.template:
     src: "{{ ipaccess_template }}"
     dest: "{{ iptables_tmp_file }}"
@@ -32,7 +47,7 @@
     backup: no
   tags: ['rules', 'iptablestmp', 'iptables.tmp', 'iptables']
 
-- name: "Verify iptables.tmp file"
+- name: "Verify the saved iptables.tmp file"
   ansible.builtin.command: "iptables-restore --test {{ iptables_tmp_file }}"
   tags: ['rules', 'iptablestmp', 'iptables.tmp', 'iptables']
 
