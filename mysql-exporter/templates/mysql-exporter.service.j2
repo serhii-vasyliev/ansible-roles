@@ -1,0 +1,12 @@
+[Unit]
+Description=MySQL Exporter
+After=network.target
+
+[Service]
+User={{ mysql_exporter_user }}
+Group={{ mysql_exporter_group }}
+ExecStart=/usr/local/sbin/mysql-exporter --config.my-cnf={{ mysql_exporter_mycnf }}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
